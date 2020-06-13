@@ -1,6 +1,5 @@
 package com.shenlinqiang.mytailbased;
 
-import com.shenlinqiang.mytailbased.client.ReadData;
 import okhttp3.*;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -19,7 +18,7 @@ public class Utils {
             .build();
 
     public static void callHttpAsync(Request request) throws IOException {
-//        LOGGER.info("请求地址:" + request.url().encodedPath());
+        LOGGER.info("请求地址:" + request.url().encodedPath());
         Call call = OK_HTTP_CLIENT.newCall(request);
         call.enqueue(new Callback() {
             @Override
@@ -29,7 +28,7 @@ public class Utils {
 
             @Override
             public void onResponse(Call call, Response response) throws IOException {
-//                LOGGER.info(response.body().string());
+                LOGGER.info(response.body().string());
             }
         });
     }
