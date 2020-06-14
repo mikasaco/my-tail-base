@@ -2,6 +2,7 @@ com/shenlinqiang/mytailbased/backend/TraceIdBatch.class
 com/shenlinqiang/mytailbased/backend/HandleFinishBatchDataTask.class
 com/shenlinqiang/mytailbased/client/Batch.class
 com/shenlinqiang/mytailbased/backend/BackendController.class
+com/shenlinqiang/mytailbased/client/RemoveBatchTask.class
 com/shenlinqiang/mytailbased/client/Trace.class
 com/shenlinqiang/mytailbased/backend/HandleFinishBatchDataTask$1.class
 com/shenlinqiang/mytailbased/Utils$1.class

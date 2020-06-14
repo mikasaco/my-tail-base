@@ -15,8 +15,9 @@ public class ClientController {
 
     @RequestMapping("/getWrongTrace")
     public String getWrongTrace(@RequestBody TraceIdBatch traceIdBatch) {
+//        LOGGER.info("收到了线程编号为:" + traceIdBatch.getThreadNo() +
+//                "要求删除批次号为" + (traceIdBatch.getBatchNo() - 1) + " 的请求");
         String res = ReadData.getWrongTracing(traceIdBatch);
-//        LOGGER.info("获取WrongTrace，线程:{},批次:{},结果:{}", traceIdBatch.getThreadNo(), traceIdBatch.getBatchNo(), res);
         return res;
     }
 }

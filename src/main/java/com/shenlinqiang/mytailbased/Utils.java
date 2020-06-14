@@ -18,8 +18,8 @@ public class Utils {
             .build();
 
     public static void callHttpAsync(Request request) throws IOException {
-        LOGGER.info("请求地址:" + request.url().encodedPath());
         Call call = OK_HTTP_CLIENT.newCall(request);
+        long s = System.currentTimeMillis();
         call.enqueue(new Callback() {
             @Override
             public void onFailure(Call call, IOException e) {
@@ -28,7 +28,11 @@ public class Utils {
 
             @Override
             public void onResponse(Call call, Response response) throws IOException {
-                LOGGER.info(response.body().string());
+                response.body().string();
+                long e = System.currentTimeMillis();
+                if (e - s > 100) {
+                    LOGGER.info("异步请求地址:" + request.url().encodedPath() + " ,时间:" + (e - s) + "ms");
+                }
             }
         });
     }
@@ -38,7 +42,9 @@ public class Utils {
         Call call = OK_HTTP_CLIENT.newCall(request);
         Response response = call.execute();
         long e = System.currentTimeMillis();
-        LOGGER.info("请求地址:" + request.url().encodedPath() + " ,时间:" + (e - s) + "ms");
+        if ((e - s) > 100) {
+            LOGGER.info("请求地址:" + request.url().encodedPath() + " ,时间:" + (e - s) + "ms");
+        }
         return response;
 
     }

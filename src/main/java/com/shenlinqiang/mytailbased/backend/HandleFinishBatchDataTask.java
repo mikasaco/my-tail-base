@@ -70,6 +70,7 @@ public class HandleFinishBatchDataTask implements Runnable {
             String spans = spanSet.stream().sorted(
                     Comparator.comparing(HandleFinishBatchDataTask::getStartTime)).collect(Collectors.joining("\n"));
             spans = spans + "\n";
+//            LOGGER.info("traceId:" + traceId + ",value:\n" + spans);
             TRACE_CHUCKSUM_MAP.put(traceId, Utils.MD5(spans));
         }
     }

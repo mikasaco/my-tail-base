@@ -41,20 +41,20 @@ public class ReadData implements Runnable {
     /**
      * 所有线程的数据,数组下标 线程编号,value 批次batch和批次号的映射map
      */
-    private static List<Map<Integer, Batch>> ALLDATA = new ArrayList<>(Constants.THREAD_NUMBER);
+    public static List<Map<Integer, Batch>> ALLDATA = new ArrayList<>(Constants.THREAD_NUMBER);
 
     private static Batch[] FIRSTBATCH = new Batch[Constants.THREAD_NUMBER];
     private static Batch[] LASTBATCH = new Batch[Constants.THREAD_NUMBER];
     private static Batch[] SECONDBATCH = new Batch[Constants.THREAD_NUMBER];
 
-    private String getPath() {
+    public static String getPath() {
         String port = System.getProperty("server.port", "8080");
         String env = System.getProperty("env", "online");
         if ("test".equals(env)) {
             if ("8000".equals(port)) {
                 return "http://localhost:8080/trace1.data";
             } else if ("8001".equals(port)) {
-                return "http://localhost:8080/trace1.data";
+                return "http://localhost:8080/trace2.data";
             } else {
                 return null;
             }
@@ -62,7 +62,7 @@ public class ReadData implements Runnable {
             if ("8000".equals(port)) {
                 return "http://localhost:" + CommonController.getDataSourcePort() + "/trace1.data";
             } else if ("8001".equals(port)) {
-                return "http://localhost:" + CommonController.getDataSourcePort() + "/trace2.data";
+                return "http://localhost:" + CommonController.getDataSourcePort() + "/trace1.data";
             } else {
                 return null;
             }
@@ -79,11 +79,9 @@ public class ReadData implements Runnable {
         }
         try {
             URL url = new URL(path);
-            Thread.sleep(4000);
             HttpURLConnection httpConnection = (HttpURLConnection) url.openConnection(Proxy.NO_PROXY);
             httpConnection.setRequestProperty("range", "bytes=" + threadNo * Constants.ONEG + "-"
                     + (threadNo + 1) * Constants.ONEG);
-            Thread.sleep(4000);
             InputStream input = httpConnection.getInputStream();
             BufferedReader bf = new BufferedReader(new InputStreamReader(input));
             Set<String> badTraceIdList = new HashSet<>(50);
@@ -96,6 +94,11 @@ public class ReadData implements Runnable {
                 if (batch == null) {
                     batch = new Batch();
                     batch.setBatchNo(batchNo);
+
+                    while (ALLDATA.get(threadNo).size() > 50) {
+                        Thread.sleep(10);
+                    }
+//                    LOGGER.info("添加批次：" + batchNo);
                     ALLDATA.get(threadNo).put(batchNo, batch);
                 }
                 count++;
@@ -181,54 +184,53 @@ public class ReadData implements Runnable {
 
     public static String getWrongTracing(TraceIdBatch traceIdBatch) {
         Map<String, List<String>> wrongTraceMap = new HashMap<>();
-        int batchNo = traceIdBatch.getBatchNo();
-        int threadNo = traceIdBatch.getThreadNo();
-        Set<String> traceIdList = traceIdBatch.getTraceIdList();
-        boolean lastBatch = traceIdBatch.isLastBatch();
+        try {
+            int batchNo = traceIdBatch.getBatchNo();
+            int threadNo = traceIdBatch.getThreadNo();
+            Set<String> traceIdList = traceIdBatch.getTraceIdList();
+            boolean lastBatch = traceIdBatch.isLastBatch();
 
-        Batch batch = ALLDATA.get(threadNo).get(batchNo);
-        if (lastBatch) {
-            if (threadNo == Constants.THREAD_NUMBER - 1) {
-                getWrongTraceWithBatch(ALLDATA.get(threadNo).get(batchNo - 1), traceIdList, wrongTraceMap);
-                getWrongTraceWithBatch(batch, traceIdList, wrongTraceMap);
+            Batch batch = ALLDATA.get(threadNo).get(batchNo);
+            if (lastBatch) {
+                if (threadNo == Constants.THREAD_NUMBER - 1) {
+                    getWrongTraceWithBatch(ALLDATA.get(threadNo).get(batchNo - 1), traceIdList, wrongTraceMap, batchNo);
+                    getWrongTraceWithBatch(batch, traceIdList, wrongTraceMap, batchNo);
+                } else {
+                    getWrongTraceWithBatch(ALLDATA.get(threadNo).get(batchNo - 1), traceIdList, wrongTraceMap, batchNo);
+                    getWrongTraceWithBatch(batch, traceIdList, wrongTraceMap, batchNo);
+                    getWrongTraceWithBatch(FIRSTBATCH[threadNo + 1], traceIdList, wrongTraceMap, batchNo);
+                }
+            } else if (batchNo == 0) {
+                if (threadNo == 0) {
+                    getWrongTraceWithBatch(FIRSTBATCH[threadNo], traceIdList, wrongTraceMap, batchNo);
+                    getWrongTraceWithBatch(SECONDBATCH[threadNo], traceIdList, wrongTraceMap, batchNo);
+                } else {
+                    getWrongTraceWithBatch(LASTBATCH[threadNo - 1], traceIdList, wrongTraceMap, batchNo);
+                    getWrongTraceWithBatch(FIRSTBATCH[threadNo], traceIdList, wrongTraceMap, batchNo);
+                    getWrongTraceWithBatch(SECONDBATCH[threadNo], traceIdList, wrongTraceMap, batchNo);
+                }
             } else {
-                getWrongTraceWithBatch(ALLDATA.get(threadNo).get(batchNo - 1), traceIdList, wrongTraceMap);
-                getWrongTraceWithBatch(batch, traceIdList, wrongTraceMap);
-                getWrongTraceWithBatch(FIRSTBATCH[threadNo + 1], traceIdList, wrongTraceMap);
+                getWrongTraceWithBatch(ALLDATA.get(threadNo).get(batchNo - 1), traceIdList, wrongTraceMap, batchNo);
+                getWrongTraceWithBatch(batch, traceIdList, wrongTraceMap, batchNo);
+                getWrongTraceWithBatch(ALLDATA.get(threadNo).get(batchNo + 1), traceIdList, wrongTraceMap, batchNo);
             }
-        } else if (batchNo == 0) {
-            if (threadNo == 0) {
-                getWrongTraceWithBatch(FIRSTBATCH[threadNo], traceIdList, wrongTraceMap);
-                getWrongTraceWithBatch(SECONDBATCH[threadNo], traceIdList, wrongTraceMap);
+
+            if (batchNo == 0) {
+
             } else {
-                getWrongTraceWithBatch(LASTBATCH[threadNo - 1], traceIdList, wrongTraceMap);
-                getWrongTraceWithBatch(FIRSTBATCH[threadNo], traceIdList, wrongTraceMap);
-                getWrongTraceWithBatch(SECONDBATCH[threadNo], traceIdList, wrongTraceMap);
+                LOGGER.info("添加到移除队列，" + (batchNo - 1));
+                RemoveBatchTask.holder.get(threadNo).add(batchNo - 1);
             }
-        } else {
-            getWrongTraceWithBatch(ALLDATA.get(threadNo).get(batchNo - 1), traceIdList, wrongTraceMap);
-            getWrongTraceWithBatch(batch, traceIdList, wrongTraceMap);
-            getWrongTraceWithBatch(ALLDATA.get(threadNo).get(batchNo + 1), traceIdList, wrongTraceMap);
-//            ALLDATA.get(threadNo).remove(batchNo - 1);
+        } catch (Exception e) {
+            LOGGER.error(e.getMessage());
+        } finally {
+            return JSON.toJSONString(wrongTraceMap);
+
         }
 
-        Map<Integer, Batch> batchMap = ALLDATA.get(threadNo);
-        Set<Map.Entry<Integer, Batch>> entries = batchMap.entrySet();
-        StringBuilder sb = new StringBuilder();
-        for (Map.Entry<Integer, Batch> entry : entries) {
-            sb.append(entry.getKey() + " ");
-        }
-        if (batchNo == 0) {
-
-        } else {
-            if (ALLDATA.get(threadNo).get(batchNo - 2) == null) {
-                ALLDATA.get(threadNo).remove(batchNo - 1);
-            }
-        }
-        return JSON.toJSONString(wrongTraceMap);
     }
 
-    private static void getWrongTraceWithBatch(Batch batch, Set<String> traceIdList, Map<String, List<String>> wrongTraceMap) {
+    private static void getWrongTraceWithBatch(Batch batch, Set<String> traceIdList, Map<String, List<String>> wrongTraceMap, int batchNo) {
         if (batch == null) {
             LOGGER.warn("批次batch为空");
             return;
@@ -244,7 +246,6 @@ public class ReadData implements Runnable {
                 } else {
                     wrongTraceMap.put(traceId, trace.getSpans());
                 }
-
             }
         }
 

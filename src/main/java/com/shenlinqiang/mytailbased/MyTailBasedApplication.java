@@ -1,7 +1,6 @@
 package com.shenlinqiang.mytailbased;
 
 import com.shenlinqiang.mytailbased.backend.BackendController;
-import com.shenlinqiang.mytailbased.client.ReadData;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.boot.SpringApplication;
