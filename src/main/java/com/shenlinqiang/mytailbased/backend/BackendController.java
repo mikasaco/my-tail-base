@@ -8,9 +8,11 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
 import java.util.ArrayList;
+import java.util.Collection;
 import java.util.List;
 import java.util.Map;
 import java.util.concurrent.*;
+import java.util.concurrent.atomic.AtomicInteger;
 
 import static com.shenlinqiang.mytailbased.Constants.PROCESS_COUNT;
 
@@ -26,6 +28,8 @@ public class BackendController {
      */
     public static List<Map<Integer, TraceIdBatch>> ALL_THREAD_TRACEIDBATCH = new ArrayList<>();
 
+    public static AtomicInteger counter = new AtomicInteger();
+
 
     public static void init() {
         for (int i = 0; i < Constants.THREAD_NUMBER; i++) {
@@ -34,8 +38,8 @@ public class BackendController {
         }
     }
 
-    private static ExecutorService executorService = new ThreadPoolExecutor(Constants.THREAD_NUMBER,Constants.THREAD_NUMBER,
-            60L, TimeUnit.MILLISECONDS,new ArrayBlockingQueue(30));
+    private static ExecutorService executorService = new ThreadPoolExecutor(Constants.THREAD_NUMBER, Constants.THREAD_NUMBER,
+            60L, TimeUnit.MILLISECONDS, new LinkedBlockingDeque<>());
 //            Executors.newFixedThreadPool(Constants.THREAD_NUMBER);
 
 
@@ -46,11 +50,13 @@ public class BackendController {
      */
     @RequestMapping("/setWrongTraceId")
     public String setWrongTraceId(@RequestBody TraceIdBatch traceIdBatch) {
+
         Map<Integer, TraceIdBatch> map = ALL_THREAD_TRACEIDBATCH.get(traceIdBatch.getThreadNo());
         TraceIdBatch uploadedBatch = map.get(traceIdBatch.getBatchNo());
         if (uploadedBatch == null) {
             map.put(traceIdBatch.getBatchNo(), traceIdBatch);
         } else {
+            counter.incrementAndGet();
             uploadedBatch.getTraceIdList().addAll(traceIdBatch.getTraceIdList());
 
             executorService.execute(new HandleFinishBatchDataTask(uploadedBatch));
@@ -69,17 +75,17 @@ public class BackendController {
         return "suc";
     }
 
-    /**
-     * trace batch will be finished, when client process has finished.(FINISH_PROCESS_COUNT == PROCESS_COUNT)
-     *
-     * @return
-     */
+
     public static boolean isFinished() {
         if (FINISH_PROCESS_COUNT < PROCESS_COUNT) {
             return false;
         }
         for (Map<Integer, TraceIdBatch> map : ALL_THREAD_TRACEIDBATCH) {
             if (map.size() > 0) {
+                Collection<TraceIdBatch> traceIdBatches = map.values();
+                for (TraceIdBatch traceIdBatch : traceIdBatches) {
+                    executorService.execute(new HandleFinishBatchDataTask(traceIdBatch));
+                }
                 return false;
             }
         }

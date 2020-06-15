@@ -7,6 +7,7 @@ import com.shenlinqiang.mytailbased.Utils;
 import com.shenlinqiang.mytailbased.backend.TraceIdBatch;
 import okhttp3.Request;
 import okhttp3.RequestBody;
+import okhttp3.Response;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.util.StringUtils;
@@ -20,6 +21,7 @@ import java.net.URL;
 import java.util.*;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.CountDownLatch;
+import java.util.concurrent.atomic.AtomicInteger;
 
 public class ReadData implements Runnable {
     private static final Logger LOGGER = LoggerFactory.getLogger(ReadData.class.getName());
@@ -31,6 +33,10 @@ public class ReadData implements Runnable {
     public ReadData(Integer threadNo) {
         this.threadNo = threadNo;
         init();
+    }
+
+    public ReadData() {
+
     }
 
     public void init() {
@@ -105,10 +111,8 @@ public class ReadData implements Runnable {
                 String[] cols = line.split("\\|");
                 if (cols.length > 1) {
                     String traceId = cols[0];
-                    if ("44be903a93b67406".equals(traceId)) {
-                        LOGGER.info("读数据的时候，batchNo:{}" + batchNo + ",traceId:" + traceId + ",value:\n" + line);
-                    }
-                    Trace trace = batch.getTraceMap().get(traceId);
+                    Trace trace = null;
+                    trace = batch.getTraceMap().get(traceId);
                     if (trace == null) {
                         trace = new Trace(traceId);
                         List<String> spanList = new ArrayList<>();
@@ -166,7 +170,9 @@ public class ReadData implements Runnable {
             RequestBody body = RequestBody.create(Constants.MEDIATYPE, jsonStr);
 //            LOGGER.info("上传错误traceBatch, :" + jsonStr);
             Request request = new Request.Builder().url("http://localhost:8002/setWrongTraceId").post(body).build();
-            Utils.callHttpAsync(request);
+            Response response = Utils.callHttp(request);
+            response.close();
+//            Utils.callHttpAsync(request);
         } catch (Exception e) {
             LOGGER.warn("fail to updateBadTraceId, json:" + jsonStr);
         }
@@ -213,24 +219,36 @@ public class ReadData implements Runnable {
                     getWrongTraceWithBatch(SECONDBATCH[threadNo], traceIdList, wrongTraceMap, batchNo);
                 }
             } else {
-                getWrongTraceWithBatch(ALLDATA.get(threadNo).get(batchNo - 1), traceIdList, wrongTraceMap, batchNo);
+                hasBatch(threadNo, batchNo - 1);
+                hasBatch(threadNo, batchNo);
+                hasBatch(threadNo, batchNo + 1);
+                getWrongTraceWithBatch(ALLDATA.get(threadNo).get(batchNo - 1), traceIdList, wrongTraceMap, batchNo - 1);
                 getWrongTraceWithBatch(batch, traceIdList, wrongTraceMap, batchNo);
-                getWrongTraceWithBatch(ALLDATA.get(threadNo).get(batchNo + 1), traceIdList, wrongTraceMap, batchNo);
+                getWrongTraceWithBatch(ALLDATA.get(threadNo).get(batchNo + 1), traceIdList, wrongTraceMap, batchNo + 1);
             }
 
-            if (batchNo == 0) {
+            if (batchNo == 0 || lastBatch) {
 
             } else {
-//                LOGGER.info("添加到移除队列，" + (batchNo - 1));
+                ALLDATA.get(threadNo).get(batchNo - 1).addCanDel();
+                ALLDATA.get(threadNo).get(batchNo).addCanDel();
+                ALLDATA.get(threadNo).get(batchNo + 1).addCanDel();
                 RemoveBatchTask.holder.get(threadNo).add(batchNo - 1);
             }
         } catch (Exception e) {
             e.printStackTrace();
-        } finally {
-            return JSON.toJSONString(wrongTraceMap);
-
         }
+        return JSON.toJSONString(wrongTraceMap);
+    }
 
+    private static boolean hasBatch(int threadNo, int batchNo) {
+        while (true) {
+            if (ALLDATA.get(threadNo).get(batchNo) != null) {
+                return true;
+            } else {
+                LOGGER.warn("thread:{},batch:{}为空", threadNo, batchNo);
+            }
+        }
     }
 
     private static void getWrongTraceWithBatch(Batch batch, Set<String> traceIdList, Map<String, List<String>> wrongTraceMap, int batchNo) {
@@ -241,13 +259,7 @@ public class ReadData implements Runnable {
         Map<String, Trace> traceMap = batch.getTraceMap();
         for (String traceId : traceIdList) {
             Trace trace = traceMap.get(traceId);
-            if ("44be903a93b67406".equals(traceId) && trace != null) {
-                StringBuilder sb = new StringBuilder();
-                for (String span : trace.getSpans()) {
-                    sb.append(span + "\n");
-                }
-                LOGGER.info("44be903a93b67406在批次:{}中的数据有:{}", batch.getBatchNo(), sb.toString());
-            }
+
             if (trace != null && trace.getSpans() != null) {
                 // one trace may cross to batch (e.g batch size 20000, span1 in line 19999, span2 in line 20001)
                 List<String> existSpanList = wrongTraceMap.get(traceId);

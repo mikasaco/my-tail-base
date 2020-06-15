@@ -13,6 +13,9 @@ import org.slf4j.LoggerFactory;
 
 import java.util.*;
 import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.CountDownLatch;
+import java.util.concurrent.Semaphore;
+import java.util.concurrent.atomic.AtomicInteger;
 import java.util.stream.Collectors;
 
 import static com.shenlinqiang.mytailbased.Constants.CLIENT_PROCESS_PORT1;
@@ -37,10 +40,12 @@ public class HandleFinishBatchDataTask implements Runnable {
 
     private static final String[] PORTS = new String[]{CLIENT_PROCESS_PORT1, CLIENT_PROCESS_PORT2};
 
+
     @Override
     public void run() {
         try {
             if (traceIdBatch.getBatchNo() == 0 || traceIdBatch.isLastBatch()) {
+                LOGGER.info("往阻塞队列中添加," + traceIdBatch.getBatchNo());
                 HandleLastBatchDataTask.queue.add(traceIdBatch);
                 return;
             }
@@ -51,7 +56,12 @@ public class HandleFinishBatchDataTask implements Runnable {
 
     }
 
+
     public void aggregate(TraceIdBatch traceIdBatch) {
+        if (traceIdBatch == null) {
+            LOGGER.warn("aggregate()传入参数为空");
+            return;
+        }
         Map<String, Set<String>> wrongTraces = new HashMap<>();
         for (String port : PORTS) {
             Map<String, List<String>> processMap = null;
@@ -79,23 +89,15 @@ public class HandleFinishBatchDataTask implements Runnable {
             String spans = spanSet.stream().sorted(
                     Comparator.comparing(HandleFinishBatchDataTask::getStartTime)).collect(Collectors.joining("\n"));
             spans = spans + "\n";
-//            LOGGER.info("batch:{},trace:{}", traceIdBatch.getBatchNo(), traceId);
-            if ("44be903a93b67406".equals(traceId)) {
-                LOGGER.info("traceId:" + traceId + ",value:\n" + spans);
-            }
 //            LOGGER.info("traceId:" + traceId + ",value:\n" + spans);
             TRACE_CHUCKSUM_MAP.put(traceId, Utils.MD5(spans));
         }
-//        LOGGER.info("移除了batchNo:{}", traceIdBatch.getBatchNo());
         BackendController.ALL_THREAD_TRACEIDBATCH.get(traceIdBatch.getThreadNo()).remove(traceIdBatch.getBatchNo());
+        BackendController.counter.decrementAndGet();
     }
 
 
     private Map<String, List<String>> getWrongTrace(TraceIdBatch traceIdBatch, String port) {
-        if (null == traceIdBatch) {
-            LOGGER.warn("请求的traceIdBatch为null");
-            return null;
-        }
         traceIdBatch.setSendTime(System.currentTimeMillis());
         String json = JSONObject.toJSONString(traceIdBatch);
         try {

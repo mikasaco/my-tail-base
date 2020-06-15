@@ -13,6 +13,7 @@ public class ClientController {
 
     private static final Logger LOGGER = LoggerFactory.getLogger(ClientController.class.getName());
 
+
     @RequestMapping("/getWrongTrace")
     public String getWrongTrace(@RequestBody TraceIdBatch traceIdBatch) {
 //        LOGGER.info("收到了线程编号为:" + traceIdBatch.getThreadNo() +

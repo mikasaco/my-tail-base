@@ -35,8 +35,10 @@ public class RemoveBatchTask implements Runnable {
                 e.printStackTrace();
             }
             if (poll != null) {
-                ReadData.ALLDATA.get(threadNo).remove(poll);
-//                LOGGER.info("线程{} 删除了批次号 {}", threadNo, poll);
+                Batch batch = ReadData.ALLDATA.get(threadNo).get(poll);
+                if (batch.getCanDel() == 3) {
+                    ReadData.ALLDATA.get(threadNo).remove(poll);
+                }
             }
         }
     }

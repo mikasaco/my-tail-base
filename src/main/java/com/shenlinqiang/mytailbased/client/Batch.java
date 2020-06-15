@@ -1,5 +1,6 @@
 package com.shenlinqiang.mytailbased.client;
 
+import java.util.HashMap;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 
@@ -10,9 +11,13 @@ public class Batch {
     /**
      * key traceId , value Trace
      */
-    private Map<String, Trace> traceMap = new ConcurrentHashMap<>();
+    private Map<String, Trace> traceMap = new HashMap<>();
 
-    private Boolean canDel = false;
+    private Integer canDel = 0;
+
+    public void addCanDel() {
+        canDel++;
+    }
 
 
     public Map<String, Trace> getTraceMap() {
@@ -23,17 +28,18 @@ public class Batch {
         this.traceMap = traceMap;
     }
 
-    public Boolean getCanDel() {
+    public Integer getCanDel() {
         return canDel;
     }
 
-    public void setCanDel(Boolean canDel) {
+    public void setCanDel(Integer canDel) {
         this.canDel = canDel;
     }
 
     public void setBatchNo(Integer batchNo) {
         this.batchNo = batchNo;
     }
+
     public int getBatchNo() {
         return batchNo;
     }
