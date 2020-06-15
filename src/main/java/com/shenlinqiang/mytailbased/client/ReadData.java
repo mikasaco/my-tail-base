@@ -62,7 +62,7 @@ public class ReadData implements Runnable {
             if ("8000".equals(port)) {
                 return "http://localhost:" + CommonController.getDataSourcePort() + "/trace1.data";
             } else if ("8001".equals(port)) {
-                return "http://localhost:" + CommonController.getDataSourcePort() + "/trace1.data";
+                return "http://localhost:" + CommonController.getDataSourcePort() + "/trace2.data";
             } else {
                 return null;
             }
