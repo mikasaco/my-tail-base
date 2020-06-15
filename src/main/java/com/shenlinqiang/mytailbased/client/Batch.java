@@ -13,7 +13,7 @@ public class Batch {
      */
     private Map<String, Trace> traceMap = new HashMap<>();
 
-    private Integer canDel = 0;
+    private volatile Integer canDel = 0;
 
     public void addCanDel() {
         canDel++;

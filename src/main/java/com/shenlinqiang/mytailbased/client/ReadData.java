@@ -79,6 +79,7 @@ public class ReadData implements Runnable {
     @Override
     public void run() {
         String path = getPath();
+        long s = System.currentTimeMillis();
         if (StringUtils.isEmpty(path)) {
             LOGGER.warn("path is empty");
             return;
@@ -155,6 +156,8 @@ public class ReadData implements Runnable {
             traceIdBatch.setBatchNo(batchNo);
             traceIdBatch.setLastBatch(true);
             updateWrongTraceId(traceIdBatch);
+            long e = System.currentTimeMillis();
+            LOGGER.info("线程:{}，读完文件花费时间:{} ms", threadNo, (e - s));
             countDownLatch.countDown();
             callFinish();
             bf.close();
@@ -247,6 +250,11 @@ public class ReadData implements Runnable {
                 return true;
             } else {
                 LOGGER.warn("thread:{},batch:{}为空", threadNo, batchNo);
+                try {
+                    Thread.sleep(10);
+                } catch (InterruptedException e) {
+                    e.printStackTrace();
+                }
             }
         }
     }

@@ -12,7 +12,7 @@ public class Constants {
     public static int BATCH_SIZE = 20000;
     public static int PROCESS_COUNT =  2;
     public static Long ONEG = 0L;
-    public static final int THREAD_NUMBER = 1;
+    public static final int THREAD_NUMBER = 4;
 
     public static final MediaType MEDIATYPE = MediaType.parse("application/json; charset=utf-8");
 
