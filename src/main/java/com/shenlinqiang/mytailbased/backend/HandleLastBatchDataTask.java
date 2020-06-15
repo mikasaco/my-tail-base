@@ -33,15 +33,11 @@ public class HandleLastBatchDataTask implements Runnable {
     public void run() {
         try {
             for (int i = 0; i < 2 * Constants.THREAD_NUMBER; i++) {
-                try {
-                    TraceIdBatch traceIdBatch = queue.poll(10, TimeUnit.MILLISECONDS);
-                    if (traceIdBatch == null) {
-                        LOGGER.warn("阻塞队列中没有任务");
-                    }
-                    new HandleFinishBatchDataTask().aggregate(traceIdBatch);
-                } catch (InterruptedException e) {
-                    e.printStackTrace();
+                TraceIdBatch traceIdBatch = queue.poll(10, TimeUnit.MILLISECONDS);
+                if (traceIdBatch == null) {
+                    LOGGER.warn("阻塞队列中没有任务");
                 }
+                HandleFinishBatchDataTask.aggregate(traceIdBatch);
             }
             if (needSend) {
                 LOGGER.warn("======应该是所有数据都处理好了，要准备上报了======");
@@ -53,12 +49,12 @@ public class HandleLastBatchDataTask implements Runnable {
 
     }
 
-    public static Object lock = new Object();
-
     private void sendCheckSum() {
         try {
             while (true) {
-                if (BackendController.isFinished() && BackendController.counter.get() == 0) {
+                if (BackendController.isFinished() && BackendController.counter.get() <= 0) {
+                    LOGGER.info("请求总计：{}, 处理总计：{}", BackendController.counterRequest.get(),
+                            HandleFinishBatchDataTask.counterDe.get());
 
                     String result = JSON.toJSONString(HandleFinishBatchDataTask.TRACE_CHUCKSUM_MAP);
                     RequestBody body = new FormBody.Builder()

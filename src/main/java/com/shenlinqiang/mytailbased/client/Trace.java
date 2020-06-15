@@ -6,7 +6,7 @@ import java.util.List;
 public class Trace {
     private String traceId ;
 
-    private List<String> spans = new ArrayList<>(15);
+    private List<String> spans = new ArrayList<>(50);
 
     public Trace(String traceId) {
         this.traceId = traceId;

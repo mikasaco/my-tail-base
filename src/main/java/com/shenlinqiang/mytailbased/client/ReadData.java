@@ -103,6 +103,7 @@ public class ReadData implements Runnable {
                     batch.setBatchNo(batchNo);
 
                     while (ALLDATA.get(threadNo).size() > 50) {
+                        LOGGER.warn("数据太多，等待一下");
                         Thread.sleep(10);
                     }
 //                    LOGGER.info("添加批次：" + batchNo);

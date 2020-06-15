@@ -13,8 +13,6 @@ import org.slf4j.LoggerFactory;
 
 import java.util.*;
 import java.util.concurrent.ConcurrentHashMap;
-import java.util.concurrent.CountDownLatch;
-import java.util.concurrent.Semaphore;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.stream.Collectors;
 
@@ -32,14 +30,12 @@ public class HandleFinishBatchDataTask implements Runnable {
         this.traceIdBatch = traceIdBatch;
     }
 
-    public HandleFinishBatchDataTask() {
-    }
-
     public static Map<String, String> TRACE_CHUCKSUM_MAP = new ConcurrentHashMap<>();
 
 
     private static final String[] PORTS = new String[]{CLIENT_PROCESS_PORT1, CLIENT_PROCESS_PORT2};
 
+    public static AtomicInteger counterDe = new AtomicInteger(0);
 
     @Override
     public void run() {
@@ -57,47 +53,50 @@ public class HandleFinishBatchDataTask implements Runnable {
     }
 
 
-    public void aggregate(TraceIdBatch traceIdBatch) {
-        if (traceIdBatch == null) {
-            LOGGER.warn("aggregate()传入参数为空");
-            return;
-        }
-        Map<String, Set<String>> wrongTraces = new HashMap<>();
-        for (String port : PORTS) {
-            Map<String, List<String>> processMap = null;
-            try {
-                processMap = getWrongTrace(traceIdBatch, port);
-            } catch (Exception e) {
-                e.printStackTrace();
-            }
-            if (processMap != null) {
-                for (Map.Entry<String, List<String>> entry : processMap.entrySet()) {
-                    String traceId = entry.getKey();
-                    Set<String> spanSet = wrongTraces.get(traceId);
-                    if (spanSet == null) {
-                        spanSet = new HashSet<>();
-                        wrongTraces.put(traceId, spanSet);
+    public static void aggregate(TraceIdBatch traceIdBatch) {
+        try {
+            Map<String, Set<String>> wrongTraces = new HashMap<>();
+            for (String port : PORTS) {
+                Map<String, List<String>> processMap = null;
+                try {
+                    processMap = getWrongTrace(traceIdBatch, port);
+                } catch (Exception e) {
+                    e.printStackTrace();
+                }
+                if (processMap != null) {
+                    for (Map.Entry<String, List<String>> entry : processMap.entrySet()) {
+                        String traceId = entry.getKey();
+                        Set<String> spanSet = wrongTraces.get(traceId);
+                        if (spanSet == null) {
+                            spanSet = new HashSet<>();
+                            wrongTraces.put(traceId, spanSet);
+                        }
+                        spanSet.addAll(entry.getValue());
                     }
-                    spanSet.addAll(entry.getValue());
                 }
             }
-        }
 //        LOGGER.info("getWrong:" + batchPos + ", traceIdsize:" + traceIdBatch.getTraceIdList().size() + ",result:" + wrongTraces.size());
-        for (Map.Entry<String, Set<String>> entry : wrongTraces.entrySet()) {
-            String traceId = entry.getKey();
-            Set<String> spanSet = entry.getValue();
-            String spans = spanSet.stream().sorted(
-                    Comparator.comparing(HandleFinishBatchDataTask::getStartTime)).collect(Collectors.joining("\n"));
-            spans = spans + "\n";
+            for (Map.Entry<String, Set<String>> entry : wrongTraces.entrySet()) {
+                String traceId = entry.getKey();
+                Set<String> spanSet = entry.getValue();
+                String spans = spanSet.stream().sorted(
+                        Comparator.comparing(HandleFinishBatchDataTask::getStartTime)).collect(Collectors.joining("\n"));
+                spans = spans + "\n";
 //            LOGGER.info("traceId:" + traceId + ",value:\n" + spans);
-            TRACE_CHUCKSUM_MAP.put(traceId, Utils.MD5(spans));
+                TRACE_CHUCKSUM_MAP.put(traceId, Utils.MD5(spans));
+            }
+            BackendController.ALL_THREAD_TRACEIDBATCH.get(traceIdBatch.getThreadNo()).remove(traceIdBatch.getBatchNo());
+        } catch (Exception e) {
+            e.printStackTrace();
+        }finally {
+            BackendController.counter.decrementAndGet();
+            counterDe.incrementAndGet();
         }
-        BackendController.ALL_THREAD_TRACEIDBATCH.get(traceIdBatch.getThreadNo()).remove(traceIdBatch.getBatchNo());
-        BackendController.counter.decrementAndGet();
+
     }
 
 
-    private Map<String, List<String>> getWrongTrace(TraceIdBatch traceIdBatch, String port) {
+    private static Map<String, List<String>> getWrongTrace(TraceIdBatch traceIdBatch, String port) {
         traceIdBatch.setSendTime(System.currentTimeMillis());
         String json = JSONObject.toJSONString(traceIdBatch);
         try {

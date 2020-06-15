@@ -7,6 +7,7 @@ com/shenlinqiang/mytailbased/client/RemoveBatchTask.class
 com/shenlinqiang/mytailbased/client/Trace.class
 com/shenlinqiang/mytailbased/backend/HandleFinishBatchDataTask$1.class
 com/shenlinqiang/mytailbased/Utils$1.class
+com/shenlinqiang/mytailbased/client/IoTask.class
 com/shenlinqiang/mytailbased/backend/HandleLastBatchDataTask.class
 com/shenlinqiang/mytailbased/client/ReadData.class
 com/shenlinqiang/mytailbased/Constants.class

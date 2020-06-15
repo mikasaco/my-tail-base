@@ -21,7 +21,7 @@ public class BackendController {
 
     private static final Logger LOGGER = LoggerFactory.getLogger(BackendController.class.getName());
 
-    private static volatile Integer FINISH_PROCESS_COUNT = 0;
+    private static AtomicInteger FINISH_PROCESS_COUNT = new AtomicInteger(0);
 
     /**
      * 每个线程一个Map，key批次号，value TraceIdBatch，当TraceIdBatch的processCount=2放入线程池处理
@@ -29,6 +29,7 @@ public class BackendController {
     public static List<Map<Integer, TraceIdBatch>> ALL_THREAD_TRACEIDBATCH = new ArrayList<>();
 
     public static AtomicInteger counter = new AtomicInteger();
+    public static AtomicInteger counterRequest = new AtomicInteger();
 
 
     public static void init() {
@@ -57,8 +58,8 @@ public class BackendController {
             map.put(traceIdBatch.getBatchNo(), traceIdBatch);
         } else {
             counter.incrementAndGet();
+            counterRequest.incrementAndGet();
             uploadedBatch.getTraceIdList().addAll(traceIdBatch.getTraceIdList());
-
             executorService.execute(new HandleFinishBatchDataTask(uploadedBatch));
         }
         return "suc";
@@ -66,9 +67,9 @@ public class BackendController {
 
     @RequestMapping("/finish")
     public String finish() {
-        FINISH_PROCESS_COUNT++;
+        FINISH_PROCESS_COUNT.incrementAndGet();
         LOGGER.warn("receive call 'finish', count:" + FINISH_PROCESS_COUNT);
-        if (FINISH_PROCESS_COUNT >= Constants.PROCESS_COUNT) {
+        if (FINISH_PROCESS_COUNT.get() >= Constants.PROCESS_COUNT) {
             new Thread(new HandleLastBatchDataTask(true)).start();
         }
 
@@ -77,15 +78,15 @@ public class BackendController {
 
 
     public static boolean isFinished() {
-        if (FINISH_PROCESS_COUNT < PROCESS_COUNT) {
+        if (FINISH_PROCESS_COUNT.get() < PROCESS_COUNT) {
             return false;
         }
         for (Map<Integer, TraceIdBatch> map : ALL_THREAD_TRACEIDBATCH) {
             if (map.size() > 0) {
-                Collection<TraceIdBatch> traceIdBatches = map.values();
-                for (TraceIdBatch traceIdBatch : traceIdBatches) {
-                    executorService.execute(new HandleFinishBatchDataTask(traceIdBatch));
-                }
+//                Collection<TraceIdBatch> traceIdBatches = map.values();
+//                for (TraceIdBatch traceIdBatch : traceIdBatches) {
+//                    executorService.execute(new HandleFinishBatchDataTask(traceIdBatch));
+//                }
                 return false;
             }
         }
