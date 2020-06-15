@@ -3,6 +3,7 @@ package com.shenlinqiang.mytailbased.backend;
 
 import com.shenlinqiang.mytailbased.Constants;
 
+import java.util.Date;
 import java.util.HashSet;
 import java.util.Set;
 
@@ -13,6 +14,8 @@ public class TraceIdBatch {
     private int threadNo;
 
     private boolean lastBatch = false;
+
+    private long sendTime;
 
     private Set<String> traceIdList = new HashSet<>(Constants.BATCH_SIZE / 10);
 
@@ -49,5 +52,13 @@ public class TraceIdBatch {
 
     public void setBatchNo(int batchNo) {
         this.batchNo = batchNo;
+    }
+
+    public long getSendTime() {
+        return sendTime;
+    }
+
+    public void setSendTime(long sendTime) {
+        this.sendTime = sendTime;
     }
 }

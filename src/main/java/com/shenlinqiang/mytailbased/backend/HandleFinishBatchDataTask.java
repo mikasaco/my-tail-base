@@ -13,7 +13,6 @@ import org.slf4j.LoggerFactory;
 
 import java.util.*;
 import java.util.concurrent.ConcurrentHashMap;
-import java.util.concurrent.atomic.AtomicInteger;
 import java.util.stream.Collectors;
 
 import static com.shenlinqiang.mytailbased.Constants.CLIENT_PROCESS_PORT1;
@@ -81,6 +80,7 @@ public class HandleFinishBatchDataTask implements Runnable {
             LOGGER.warn("请求的traceIdBatch为null");
             return null;
         }
+        traceIdBatch.setSendTime(System.currentTimeMillis());
         String json = JSONObject.toJSONString(traceIdBatch);
         try {
             RequestBody body = RequestBody.create(Constants.MEDIATYPE, json);

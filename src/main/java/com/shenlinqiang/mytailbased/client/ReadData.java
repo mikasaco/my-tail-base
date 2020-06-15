@@ -218,7 +218,7 @@ public class ReadData implements Runnable {
             if (batchNo == 0) {
 
             } else {
-                LOGGER.info("添加到移除队列，" + (batchNo - 1));
+//                LOGGER.info("添加到移除队列，" + (batchNo - 1));
                 RemoveBatchTask.holder.get(threadNo).add(batchNo - 1);
             }
         } catch (Exception e) {

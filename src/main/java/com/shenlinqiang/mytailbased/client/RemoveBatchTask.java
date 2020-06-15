@@ -36,7 +36,7 @@ public class RemoveBatchTask implements Runnable {
             }
             if (poll != null) {
                 ReadData.ALLDATA.get(threadNo).remove(poll);
-                LOGGER.info("线程{} 删除了批次号 {}", threadNo, poll);
+//                LOGGER.info("线程{} 删除了批次号 {}", threadNo, poll);
             }
         }
     }

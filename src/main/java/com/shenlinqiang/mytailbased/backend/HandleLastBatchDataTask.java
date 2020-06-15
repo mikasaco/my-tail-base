@@ -52,7 +52,7 @@ public class HandleLastBatchDataTask implements Runnable {
                     .add("result", result).build();
             String url = String.format("http://localhost:%s/api/finished", CommonController.getDataSourcePort());
             Request request = new Request.Builder().url(url).post(body).build();
-            LOGGER.warn("最后上传的数据：" + result);
+//            LOGGER.warn("最后上传的数据：" + result);
             Utils.callHttpAsync(request);
             return true;
         } catch (Exception e) {

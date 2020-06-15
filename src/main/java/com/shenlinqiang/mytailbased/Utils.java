@@ -43,7 +43,7 @@ public class Utils {
         Response response = call.execute();
         long e = System.currentTimeMillis();
         if ((e - s) > 100) {
-            LOGGER.info("请求地址:" + request.url().encodedPath() + " ,时间:" + (e - s) + "ms");
+//            LOGGER.info("请求地址:" + request.url().encodedPath() + " ,时间:" + (e - s) + "ms");
         }
         return response;
 
