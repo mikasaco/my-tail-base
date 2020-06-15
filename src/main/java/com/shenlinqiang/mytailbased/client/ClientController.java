@@ -18,7 +18,7 @@ public class ClientController {
 //        LOGGER.info("收到了线程编号为:" + traceIdBatch.getThreadNo() +
 //                "要求删除批次号为" + (traceIdBatch.getBatchNo() - 1) + " 的请求");
         long e = System.currentTimeMillis();
-        LOGGER.info("收到请求花费时间：" + (e - traceIdBatch.getSendTime()) + "ms");
+//        LOGGER.info("收到请求花费时间：" + (e - traceIdBatch.getSendTime()) + "ms");
         String res = ReadData.getWrongTracing(traceIdBatch);
         return res;
     }

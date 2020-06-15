@@ -105,6 +105,9 @@ public class ReadData implements Runnable {
                 String[] cols = line.split("\\|");
                 if (cols.length > 1) {
                     String traceId = cols[0];
+                    if ("44be903a93b67406".equals(traceId)) {
+                        LOGGER.info("读数据的时候，batchNo:{}" + batchNo + ",traceId:" + traceId + ",value:\n" + line);
+                    }
                     Trace trace = batch.getTraceMap().get(traceId);
                     if (trace == null) {
                         trace = new Trace(traceId);
@@ -222,7 +225,7 @@ public class ReadData implements Runnable {
                 RemoveBatchTask.holder.get(threadNo).add(batchNo - 1);
             }
         } catch (Exception e) {
-            LOGGER.error(e.getMessage());
+            e.printStackTrace();
         } finally {
             return JSON.toJSONString(wrongTraceMap);
 
@@ -232,12 +235,19 @@ public class ReadData implements Runnable {
 
     private static void getWrongTraceWithBatch(Batch batch, Set<String> traceIdList, Map<String, List<String>> wrongTraceMap, int batchNo) {
         if (batch == null) {
-            LOGGER.warn("批次batch为空");
+            LOGGER.warn("批次batch为空," + batchNo);
             return;
         }
         Map<String, Trace> traceMap = batch.getTraceMap();
         for (String traceId : traceIdList) {
             Trace trace = traceMap.get(traceId);
+            if ("44be903a93b67406".equals(traceId) && trace != null) {
+                StringBuilder sb = new StringBuilder();
+                for (String span : trace.getSpans()) {
+                    sb.append(span + "\n");
+                }
+                LOGGER.info("44be903a93b67406在批次:{}中的数据有:{}", batch.getBatchNo(), sb.toString());
+            }
             if (trace != null && trace.getSpans() != null) {
                 // one trace may cross to batch (e.g batch size 20000, span1 in line 19999, span2 in line 20001)
                 List<String> existSpanList = wrongTraceMap.get(traceId);

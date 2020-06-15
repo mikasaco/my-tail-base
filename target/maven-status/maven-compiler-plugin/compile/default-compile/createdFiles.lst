@@ -1,4 +1,5 @@
 com/shenlinqiang/mytailbased/backend/TraceIdBatch.class
+com/shenlinqiang/mytailbased/client/RpcServer.class
 com/shenlinqiang/mytailbased/backend/HandleFinishBatchDataTask.class
 com/shenlinqiang/mytailbased/client/Batch.class
 com/shenlinqiang/mytailbased/backend/BackendController.class

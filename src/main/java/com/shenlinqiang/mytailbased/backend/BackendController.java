@@ -24,7 +24,7 @@ public class BackendController {
     /**
      * 每个线程一个Map，key批次号，value TraceIdBatch，当TraceIdBatch的processCount=2放入线程池处理
      */
-    private static List<Map<Integer, TraceIdBatch>> ALL_THREAD_TRACEIDBATCH = new ArrayList<>();
+    public static List<Map<Integer, TraceIdBatch>> ALL_THREAD_TRACEIDBATCH = new ArrayList<>();
 
 
     public static void init() {
@@ -35,7 +35,7 @@ public class BackendController {
     }
 
     private static ExecutorService executorService = new ThreadPoolExecutor(Constants.THREAD_NUMBER,Constants.THREAD_NUMBER,
-            60L, TimeUnit.MILLISECONDS,new ArrayBlockingQueue(60));
+            60L, TimeUnit.MILLISECONDS,new ArrayBlockingQueue(30));
 //            Executors.newFixedThreadPool(Constants.THREAD_NUMBER);
 
 
@@ -54,8 +54,6 @@ public class BackendController {
             uploadedBatch.getTraceIdList().addAll(traceIdBatch.getTraceIdList());
 
             executorService.execute(new HandleFinishBatchDataTask(uploadedBatch));
-            ALL_THREAD_TRACEIDBATCH.get(traceIdBatch.getThreadNo()).remove(traceIdBatch.getBatchNo());
-//            LOGGER.info("删除了批次号为" + traceIdBatch.getBatchNo() + "的上报数据");
         }
         return "suc";
     }
@@ -80,11 +78,11 @@ public class BackendController {
         if (FINISH_PROCESS_COUNT < PROCESS_COUNT) {
             return false;
         }
-//        for (Map<Integer, TraceIdBatch> map : ALL_THREAD_TRACEIDBATCH) {
-//            if (map.size() > 0) {
-//                return false;
-//            }
-//        }
+        for (Map<Integer, TraceIdBatch> map : ALL_THREAD_TRACEIDBATCH) {
+            if (map.size() > 0) {
+                return false;
+            }
+        }
         return true;
     }
 

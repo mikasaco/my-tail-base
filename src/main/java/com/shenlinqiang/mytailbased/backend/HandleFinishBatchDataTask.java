@@ -39,17 +39,27 @@ public class HandleFinishBatchDataTask implements Runnable {
 
     @Override
     public void run() {
-        if (traceIdBatch.getBatchNo() == 0 || traceIdBatch.isLastBatch()) {
-            HandleLastBatchDataTask.queue.add(traceIdBatch);
-            return;
+        try {
+            if (traceIdBatch.getBatchNo() == 0 || traceIdBatch.isLastBatch()) {
+                HandleLastBatchDataTask.queue.add(traceIdBatch);
+                return;
+            }
+            aggregate(traceIdBatch);
+        } catch (Exception e) {
+            e.printStackTrace();
         }
-        aggregate(traceIdBatch);
+
     }
 
     public void aggregate(TraceIdBatch traceIdBatch) {
         Map<String, Set<String>> wrongTraces = new HashMap<>();
         for (String port : PORTS) {
-            Map<String, List<String>> processMap = getWrongTrace(traceIdBatch, port);
+            Map<String, List<String>> processMap = null;
+            try {
+                processMap = getWrongTrace(traceIdBatch, port);
+            } catch (Exception e) {
+                e.printStackTrace();
+            }
             if (processMap != null) {
                 for (Map.Entry<String, List<String>> entry : processMap.entrySet()) {
                     String traceId = entry.getKey();
@@ -69,9 +79,15 @@ public class HandleFinishBatchDataTask implements Runnable {
             String spans = spanSet.stream().sorted(
                     Comparator.comparing(HandleFinishBatchDataTask::getStartTime)).collect(Collectors.joining("\n"));
             spans = spans + "\n";
+//            LOGGER.info("batch:{},trace:{}", traceIdBatch.getBatchNo(), traceId);
+            if ("44be903a93b67406".equals(traceId)) {
+                LOGGER.info("traceId:" + traceId + ",value:\n" + spans);
+            }
 //            LOGGER.info("traceId:" + traceId + ",value:\n" + spans);
             TRACE_CHUCKSUM_MAP.put(traceId, Utils.MD5(spans));
         }
+//        LOGGER.info("移除了batchNo:{}", traceIdBatch.getBatchNo());
+        BackendController.ALL_THREAD_TRACEIDBATCH.get(traceIdBatch.getThreadNo()).remove(traceIdBatch.getBatchNo());
     }
 
 

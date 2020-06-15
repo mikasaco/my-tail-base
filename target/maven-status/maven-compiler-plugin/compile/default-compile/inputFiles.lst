@@ -5,6 +5,7 @@
 /Users/jerryq/Desktop/my-tail-base/src/main/java/com/shenlinqiang/mytailbased/backend/BackendController.java
 /Users/jerryq/Desktop/my-tail-base/src/main/java/com/shenlinqiang/mytailbased/MyTailBasedApplication.java
 /Users/jerryq/Desktop/my-tail-base/src/main/java/com/shenlinqiang/mytailbased/client/RemoveBatchTask.java
+/Users/jerryq/Desktop/my-tail-base/src/main/java/com/shenlinqiang/mytailbased/client/RpcServer.java
 /Users/jerryq/Desktop/my-tail-base/src/main/java/com/shenlinqiang/mytailbased/client/Batch.java
 /Users/jerryq/Desktop/my-tail-base/src/main/java/com/shenlinqiang/mytailbased/Utils.java
 /Users/jerryq/Desktop/my-tail-base/src/main/java/com/shenlinqiang/mytailbased/backend/HandleFinishBatchDataTask.java

@@ -29,10 +29,10 @@ public class HandleLastBatchDataTask implements Runnable {
 
     @Override
     public void run() {
-        synchronized (HandleLastBatchDataTask.class) {
+        try {
             for (int i = 0; i < 2 * Constants.THREAD_NUMBER; i++) {
                 try {
-                    new HandleFinishBatchDataTask().aggregate(queue.poll(100, TimeUnit.MILLISECONDS));
+                    new HandleFinishBatchDataTask().aggregate(queue.poll(10, TimeUnit.MILLISECONDS));
                 } catch (InterruptedException e) {
                     e.printStackTrace();
                 }
@@ -41,23 +41,29 @@ public class HandleLastBatchDataTask implements Runnable {
                 LOGGER.warn("======应该是所有数据都处理好了，要准备上报了======");
                 sendCheckSum();
             }
+        } catch (Exception e) {
+            e.printStackTrace();
         }
 
     }
 
-    private boolean sendCheckSum() {
+    private void sendCheckSum() {
         try {
-            String result = JSON.toJSONString(HandleFinishBatchDataTask.TRACE_CHUCKSUM_MAP);
-            RequestBody body = new FormBody.Builder()
-                    .add("result", result).build();
-            String url = String.format("http://localhost:%s/api/finished", CommonController.getDataSourcePort());
-            Request request = new Request.Builder().url(url).post(body).build();
-//            LOGGER.warn("最后上传的数据：" + result);
-            Utils.callHttpAsync(request);
-            return true;
+            while (true) {
+                if (BackendController.isFinished()) {
+                    String result = JSON.toJSONString(HandleFinishBatchDataTask.TRACE_CHUCKSUM_MAP);
+                    RequestBody body = new FormBody.Builder()
+                            .add("result", result).build();
+                    String url = String.format("http://localhost:%s/api/finished", CommonController.getDataSourcePort());
+                    Request request = new Request.Builder().url(url).post(body).build();
+                    Utils.callHttpAsync(request);
+                    return;
+                } else {
+                    Thread.sleep(10);
+                }
+            }
         } catch (Exception e) {
             LOGGER.warn("fail to call finish", e);
         }
-        return false;
     }
 }
