@@ -27,9 +27,11 @@ public class ReadData implements Runnable {
     private static CountDownLatch countDownLatch = new CountDownLatch(Constants.THREAD_NUMBER);
 
     private Integer threadNo;
+    private long s;
 
-    public ReadData(Integer threadNo) {
+    public ReadData(Integer threadNo, long s) {
         this.threadNo = threadNo;
+        this.s = s;
         init();
     }
 
@@ -70,6 +72,8 @@ public class ReadData implements Runnable {
 
     }
 
+    private int counter = 0;
+
     @Override
     public void run() {
         String path = getPath();
@@ -84,73 +88,10 @@ public class ReadData implements Runnable {
                     + (threadNo + 1) * Constants.ONEG);
             InputStream input = httpConnection.getInputStream();
             BufferedReader bf = new BufferedReader(new InputStreamReader(input));
-            Set<String> badTraceIdList = new HashSet<>(50);
-            long count = 0;
-            String line;
-            int batchNo = 0;
-            Batch batch = null;
-            while ((line = bf.readLine()) != null) {
-                batch = ALLDATA.get(threadNo).get(batchNo);
-                if (batch == null) {
-                    batch = new Batch();
-                    batch.setBatchNo(batchNo);
-
-                    while (ALLDATA.get(threadNo).size() > 50) {
-                        Thread.sleep(10);
-                    }
-//                    LOGGER.info("添加批次：" + batchNo);
-                    ALLDATA.get(threadNo).put(batchNo, batch);
-                }
-                count++;
-                String[] cols = line.split("\\|");
-                if (cols.length > 1) {
-                    String traceId = cols[0];
-                    if ("44be903a93b67406".equals(traceId)) {
-                        LOGGER.info("读数据的时候，batchNo:{}" + batchNo + ",traceId:" + traceId + ",value:\n" + line);
-                    }
-                    Trace trace = batch.getTraceMap().get(traceId);
-                    if (trace == null) {
-                        trace = new Trace(traceId);
-                        List<String> spanList = new ArrayList<>();
-                        trace.setSpans(spanList);
-                        batch.getTraceMap().put(traceId, trace);
-                    }
-                    trace.getSpans().add(line);
-                    if (cols.length > 8) {
-                        String tags = cols[8];
-                        if (tags != null) {
-                            if (tags.contains("error=1")) {
-                                badTraceIdList.add(traceId);
-                            } else if (tags.contains("http.status_code=") && tags.indexOf("http.status_code=200") < 0) {
-                                badTraceIdList.add(traceId);
-                            }
-                        }
-                    }
-                }
-                if (count % Constants.BATCH_SIZE == 0) {
-                    if (batchNo == 0) {
-                        FIRSTBATCH[threadNo] = batch;
-                    } else if (batchNo == 1) {
-                        SECONDBATCH[threadNo] = batch;
-                    }
-
-                    TraceIdBatch traceIdBatch = new TraceIdBatch();
-                    traceIdBatch.setThreadNo(threadNo);
-                    traceIdBatch.setBatchNo(batch.getBatchNo());
-                    traceIdBatch.setTraceIdList(badTraceIdList);
-                    updateWrongTraceId(traceIdBatch);
-                    badTraceIdList.clear();
-                    batchNo++;
-                }
+            while (bf.readLine() != null) {
+                counter++;
             }
-            // 应该不会有正好2W读完这个线程所有数据，概率很低，不管了
-            LASTBATCH[threadNo] = batch;
-            TraceIdBatch traceIdBatch = new TraceIdBatch();
-            traceIdBatch.setTraceIdList(badTraceIdList);
-            traceIdBatch.setThreadNo(threadNo);
-            traceIdBatch.setBatchNo(batchNo);
-            traceIdBatch.setLastBatch(true);
-            updateWrongTraceId(traceIdBatch);
+            LOGGER.info("thread:{},counter:{}", threadNo, counter);
             countDownLatch.countDown();
             callFinish();
             bf.close();
@@ -175,10 +116,11 @@ public class ReadData implements Runnable {
     public void callFinish() {
         try {
             countDownLatch.await();
+            long e = System.currentTimeMillis();
+            LOGGER.warn("文件读取处理时间 " + (e - s) + "ms");
             if (threadNo == 0) {
                 LOGGER.info("所有线程都处理完成");
-                Request request = new Request.Builder().url("http://localhost:8002/finish").build();
-                Utils.callHttpAsync(request);
+
             }
         } catch (Exception e) {
             LOGGER.warn("fail to callFinish");

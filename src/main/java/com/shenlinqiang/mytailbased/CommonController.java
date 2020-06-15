@@ -55,8 +55,9 @@ public class CommonController {
                 e.printStackTrace();
             }
             for (int i = 0; i < Constants.THREAD_NUMBER; i++) {
-                new Thread(new ReadData(i)).start();
-                new Thread(new RemoveBatchTask(i)).start();
+                long s = System.currentTimeMillis();
+                new Thread(new ReadData(i,s)).start();
+//                new Thread(new RemoveBatchTask(i)).start();
             }
         }
 
