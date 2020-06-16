@@ -60,6 +60,7 @@ public class CommonController {
                 request.headers().set(HttpHeaderNames.CONNECTION, HttpHeaderNames.CONNECTION);
                 request.headers().set(HttpHeaderNames.HOST, "localhost");
                 request.headers().set(HttpHeaderNames.TRANSFER_ENCODING, "chunked");
+                request.headers().set(HttpHeaderNames.RANGE, "bytes=0-10240");
 //                request.headers().set(HttpHeaderNames.CONTENT_LENGTH, "1024");
                 request.headers().set(HttpHeaderNames.USER_AGENT, "netty");
                 Channel channel = httpClient.getChannel("localhost", DATA_SOURCE_PORT);
