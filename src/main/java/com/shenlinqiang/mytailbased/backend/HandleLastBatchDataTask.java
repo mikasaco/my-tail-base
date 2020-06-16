@@ -41,7 +41,8 @@ public class HandleLastBatchDataTask implements Runnable {
             }
             if (needSend) {
                 LOGGER.warn("======应该是所有数据都处理好了，要准备上报了======");
-                sendCheckSum();
+                long s = System.currentTimeMillis();
+                sendCheckSum(s);
             }
         } catch (Exception e) {
             e.printStackTrace();
@@ -49,10 +50,11 @@ public class HandleLastBatchDataTask implements Runnable {
 
     }
 
-    private void sendCheckSum() {
+    private void sendCheckSum(long s) {
         try {
             while (true) {
-                if (BackendController.isFinished() && BackendController.counter.get() <= 0) {
+                long e = System.currentTimeMillis();
+                if ((e - s) > 400 || BackendController.isFinished() && BackendController.counter.get() <= 0) {
                     LOGGER.info("请求总计：{}, 处理总计：{}", BackendController.counterRequest.get(),
                             HandleFinishBatchDataTask.counterDe.get());
 
