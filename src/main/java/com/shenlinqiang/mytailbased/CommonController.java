@@ -44,6 +44,8 @@ public class CommonController {
         return "suc";
     }
 
+    public static long s;
+
     @RequestMapping("/setParameter")
     public String setParamter(@RequestParam Integer port) {
         if ("test".equals(System.getProperty("env"))) {
@@ -66,6 +68,7 @@ public class CommonController {
             } catch (Exception e) {
                 e.printStackTrace();
             }
+            s = System.currentTimeMillis();
             for (int i = 0; i < Constants.THREAD_NUMBER; i++) {
                 try {
                     DefaultFullHttpRequest request = new DefaultFullHttpRequest(
