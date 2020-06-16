@@ -1,7 +1,13 @@
 package com.shenlinqiang.mytailbased;
 
 import com.shenlinqiang.mytailbased.client.ReadData;
+import com.shenlinqiang.mytailbased.client.ReadDataHttpClient;
 import com.shenlinqiang.mytailbased.client.RemoveBatchTask;
+import io.netty.buffer.Unpooled;
+import io.netty.channel.Channel;
+import io.netty.channel.ChannelFuture;
+import io.netty.channel.ChannelFutureListener;
+import io.netty.handler.codec.http.*;
 import okhttp3.OkHttpClient;
 import okhttp3.Request;
 import okhttp3.Response;
@@ -30,6 +36,8 @@ public class CommonController {
         return DATA_SOURCE_PORT;
     }
 
+    private static ReadDataHttpClient httpClient = new ReadDataHttpClient();
+
 
     @RequestMapping("/ready")
     public String ready() {
@@ -37,29 +45,32 @@ public class CommonController {
     }
 
     @RequestMapping("/setParameter")
-    public String setParamter(@RequestParam Integer port) {
-        DATA_SOURCE_PORT = port;
+    public String setParamter(@RequestParam Integer port)  {
+        if ("test".equals(System.getProperty("env"))) {
+            DATA_SOURCE_PORT = 8080;
+        } else {
+            DATA_SOURCE_PORT = port;
+        }
         if (Utils.isClientProcess()) {
-            String path = ReadData.getPath();
+
             try {
-                URL url = new URL(path);
-                final Request request = new Request.Builder()
-                        .url(url)
-                        .head()//这里注意请求方式为head
-                        .build();
-                Response response = Utils.callHttp(request);
-                long length = Long.parseLong(response.header("content-length"));
-                Constants.ONEG = length / Constants.THREAD_NUMBER;
-                LOGGER.info("文件总大小:{}，下载线程数：{},每个线程下载大小：{}", length, Constants.THREAD_NUMBER, Constants.ONEG);
+                String path = ReadData.getPath();
+                DefaultFullHttpRequest request = new DefaultFullHttpRequest(
+                        HttpVersion.HTTP_1_1, HttpMethod.GET, "/trace1.data");
+                request.headers().set(HttpHeaderNames.CONNECTION, HttpHeaderNames.CONNECTION);
+                request.headers().set(HttpHeaderNames.HOST, "localhost");
+                request.headers().set(HttpHeaderNames.TRANSFER_ENCODING, "chunked");
+//                request.headers().set(HttpHeaderNames.CONTENT_LENGTH, "1024");
+                request.headers().set(HttpHeaderNames.USER_AGENT, "netty");
+                Channel channel = httpClient.getChannel("localhost", DATA_SOURCE_PORT);
+                ChannelFuture future = channel.writeAndFlush(request).sync();
+                future.get();
             } catch (Exception e) {
                 e.printStackTrace();
             }
-            for (int i = 0; i < Constants.THREAD_NUMBER; i++) {
-                new Thread(new ReadData(i)).start();
-                new Thread(new RemoveBatchTask(i)).start();
-            }
-        }
 
+
+        }
         return "suc";
     }
 

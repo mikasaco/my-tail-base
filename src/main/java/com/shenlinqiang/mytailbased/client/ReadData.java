@@ -18,6 +18,8 @@ import java.io.InputStreamReader;
 import java.net.HttpURLConnection;
 import java.net.Proxy;
 import java.net.URL;
+import java.nio.channels.Channel;
+import java.nio.channels.FileChannel;
 import java.util.*;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.CountDownLatch;
@@ -59,6 +61,7 @@ public class ReadData implements Runnable {
         if ("test".equals(env)) {
             if ("8000".equals(port)) {
                 return "http://localhost:8080/trace1.data";
+//                return "http://localhost:8080/docker-run.text";
             } else if ("8001".equals(port)) {
                 return "http://localhost:8080/trace2.data";
             } else {
