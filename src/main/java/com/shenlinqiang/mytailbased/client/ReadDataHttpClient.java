@@ -23,7 +23,7 @@ public class ReadDataHttpClient {
             public void initChannel(SocketChannel ch) {
 
                 ch.pipeline().addLast(new HttpClientCodec());
-                ch.pipeline().addLast(new HttpObjectAggregator(655360));
+                ch.pipeline().addLast(new HttpObjectAggregator(65536000));
                 ch.pipeline().addLast(new HttpDownloadHandler());
             }
         });

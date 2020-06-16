@@ -45,31 +45,47 @@ public class CommonController {
     }
 
     @RequestMapping("/setParameter")
-    public String setParamter(@RequestParam Integer port)  {
+    public String setParamter(@RequestParam Integer port) {
         if ("test".equals(System.getProperty("env"))) {
             DATA_SOURCE_PORT = 8080;
         } else {
             DATA_SOURCE_PORT = port;
         }
+        String path = ReadData.getPath();
         if (Utils.isClientProcess()) {
-
             try {
-                String path = ReadData.getPath();
-                DefaultFullHttpRequest request = new DefaultFullHttpRequest(
-                        HttpVersion.HTTP_1_1, HttpMethod.GET, "/trace1.data");
-                request.headers().set(HttpHeaderNames.CONNECTION, HttpHeaderNames.CONNECTION);
-                request.headers().set(HttpHeaderNames.HOST, "localhost");
-                request.headers().set(HttpHeaderNames.TRANSFER_ENCODING, "chunked");
-                request.headers().set(HttpHeaderNames.RANGE, "bytes=0-10240");
-//                request.headers().set(HttpHeaderNames.CONTENT_LENGTH, "1024");
-                request.headers().set(HttpHeaderNames.USER_AGENT, "netty");
-                Channel channel = httpClient.getChannel("localhost", DATA_SOURCE_PORT);
-                ChannelFuture future = channel.writeAndFlush(request).sync();
-                future.get();
+                URL url = new URL(path);
+                final Request request = new Request.Builder()
+                        .url(url)
+                        .head()//这里注意请求方式为head
+                        .build();
+                Response response = Utils.callHttp(request);
+                long length = Long.parseLong(response.header("content-length"));
+                Constants.ONEG = length / Constants.THREAD_NUMBER;
+                LOGGER.info("文件总大小:{}，下载线程数：{},每个线程下载大小：{}", length, Constants.THREAD_NUMBER, Constants.ONEG);
             } catch (Exception e) {
                 e.printStackTrace();
             }
-
+            for (int i = 0; i < Constants.THREAD_NUMBER; i++) {
+                try {
+                    DefaultFullHttpRequest request = new DefaultFullHttpRequest(
+                            HttpVersion.HTTP_1_1, HttpMethod.GET, "/trace1.data");
+                    request.headers().set(HttpHeaderNames.CONNECTION, HttpHeaderNames.CONNECTION);
+                    request.headers().set(HttpHeaderNames.HOST, "localhost");
+                    request.headers().set(HttpHeaderNames.TRANSFER_ENCODING, "chunked");
+                    if (i == Constants.THREAD_NUMBER - 1) {
+                        request.headers().set(HttpHeaderNames.RANGE, "bytes=" + i * Constants.ONEG + "-");
+                    } else {
+                        request.headers().set(HttpHeaderNames.RANGE, "bytes=" + i * Constants.ONEG + "-" + (i + 1) * Constants.ONEG);
+                    }
+                    request.headers().set(HttpHeaderNames.USER_AGENT, "netty");
+                    Channel channel = httpClient.getChannel("localhost", DATA_SOURCE_PORT);
+                    ChannelFuture future = channel.writeAndFlush(request).sync();
+                    future.get();
+                } catch (Exception e) {
+                    e.printStackTrace();
+                }
+            }
 
         }
         return "suc";
