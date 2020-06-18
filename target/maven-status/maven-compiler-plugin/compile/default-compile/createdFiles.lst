@@ -1,3 +1,4 @@
+com/shenlinqiang/mytailbased/client/ReadDataHttpClient$1.class
 com/shenlinqiang/mytailbased/backend/TraceIdBatch.class
 com/shenlinqiang/mytailbased/client/RpcServer.class
 com/shenlinqiang/mytailbased/backend/HandleFinishBatchDataTask.class
@@ -5,13 +6,15 @@ com/shenlinqiang/mytailbased/client/Batch.class
 com/shenlinqiang/mytailbased/backend/BackendController.class
 com/shenlinqiang/mytailbased/client/RemoveBatchTask.class
 com/shenlinqiang/mytailbased/client/Trace.class
+com/shenlinqiang/mytailbased/client/ReadDataTask.class
 com/shenlinqiang/mytailbased/backend/HandleFinishBatchDataTask$1.class
 com/shenlinqiang/mytailbased/Utils$1.class
-com/shenlinqiang/mytailbased/client/IoTask.class
 com/shenlinqiang/mytailbased/backend/HandleLastBatchDataTask.class
 com/shenlinqiang/mytailbased/client/ReadData.class
 com/shenlinqiang/mytailbased/Constants.class
 com/shenlinqiang/mytailbased/Utils.class
 com/shenlinqiang/mytailbased/CommonController.class
 com/shenlinqiang/mytailbased/client/ClientController.class
+com/shenlinqiang/mytailbased/client/HttpDownloadHandler.class
 com/shenlinqiang/mytailbased/MyTailBasedApplication.class
+com/shenlinqiang/mytailbased/client/ReadDataHttpClient.class

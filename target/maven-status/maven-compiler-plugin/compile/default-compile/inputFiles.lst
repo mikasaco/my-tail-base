@@ -2,6 +2,8 @@
 /Users/jerryq/Desktop/my-tail-base/src/main/java/com/shenlinqiang/mytailbased/Constants.java
 /Users/jerryq/Desktop/my-tail-base/src/main/java/com/shenlinqiang/mytailbased/backend/HandleLastBatchDataTask.java
 /Users/jerryq/Desktop/my-tail-base/src/main/java/com/shenlinqiang/mytailbased/CommonController.java
+/Users/jerryq/Desktop/my-tail-base/src/main/java/com/shenlinqiang/mytailbased/client/ReadDataTask.java
+/Users/jerryq/Desktop/my-tail-base/src/main/java/com/shenlinqiang/mytailbased/client/ReadDataHttpClient.java
 /Users/jerryq/Desktop/my-tail-base/src/main/java/com/shenlinqiang/mytailbased/backend/BackendController.java
 /Users/jerryq/Desktop/my-tail-base/src/main/java/com/shenlinqiang/mytailbased/MyTailBasedApplication.java
 /Users/jerryq/Desktop/my-tail-base/src/main/java/com/shenlinqiang/mytailbased/client/RemoveBatchTask.java
@@ -10,6 +12,6 @@
 /Users/jerryq/Desktop/my-tail-base/src/main/java/com/shenlinqiang/mytailbased/Utils.java
 /Users/jerryq/Desktop/my-tail-base/src/main/java/com/shenlinqiang/mytailbased/backend/HandleFinishBatchDataTask.java
 /Users/jerryq/Desktop/my-tail-base/src/main/java/com/shenlinqiang/mytailbased/client/ReadData.java
-/Users/jerryq/Desktop/my-tail-base/src/main/java/com/shenlinqiang/mytailbased/client/IoTask.java
 /Users/jerryq/Desktop/my-tail-base/src/main/java/com/shenlinqiang/mytailbased/backend/TraceIdBatch.java
 /Users/jerryq/Desktop/my-tail-base/src/main/java/com/shenlinqiang/mytailbased/client/Trace.java
+/Users/jerryq/Desktop/my-tail-base/src/main/java/com/shenlinqiang/mytailbased/client/HttpDownloadHandler.java

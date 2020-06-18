@@ -23,24 +23,16 @@ public class HttpDownloadHandler extends ChannelInboundHandlerAdapter {
     @Override
     public void channelRead(ChannelHandlerContext ctx, Object msg) {
         try {
-
-            ByteBufAllocator alloc = ctx.channel().alloc();
-            ByteBuf byteBuf = alloc.directBuffer(Constants.DOWNLOAD_SIZE);
-
             HttpContent content = (HttpContent) msg;
             ByteBuf buf = content.content();
-            ByteBuffer directBuffer = ByteBuffer.allocateDirect(Constants.DOWNLOAD_SIZE + 1);
 
-//            for (int i = 0; i < buf.capacity(); i++) {
-//                byte aByte = buf.getByte(i);
-//                directBuffer.put(aByte);
-//            }
             long s = System.currentTimeMillis();
-            buildSpan(byteBuf);
+//            buildSpan(byteBuf);
             buf.release();
             long e = System.currentTimeMillis();
             System.out.println("read time: " + (e - s) + "ms");
-//            ReadDataTask.semaphore.release();
+            ReadDataTask.startOffset += buf.capacity();
+            ReadDataTask.semaphore.release();
         } catch (Exception e) {
             e.printStackTrace();
         } finally {
@@ -80,23 +72,6 @@ public class HttpDownloadHandler extends ChannelInboundHandlerAdapter {
 
     }
 
-    public static Map<Integer, Batch> ALLDATA = new ConcurrentHashMap<>();
-    public static List<String> temp = new ArrayList<>();
-
-
-    private String readBuffer() {
-        int i = 0;
-        int traceNumber = 0;
-        int batchNo = 0;
-        while (i < transForBuffer.length && LF != transForBuffer[i]) {
-
-        }
-        traceNumber++;
-        if (traceNumber % Constants.BATCH_SIZE == 0) {
-//            ALLDATA.put(batchNo, )
-        }
-        return null;
-    }
 }
 
 
