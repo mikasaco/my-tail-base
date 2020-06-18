@@ -23,7 +23,7 @@ public class RemoveBatchTask implements Runnable {
 
     private BlockingQueue<Integer> needRemoveBatch = new PriorityBlockingQueue<>();
 
-    public static List<Queue<Integer>> holder = new ArrayList<>(Constants.THREAD_NUMBER);
+    public static List<Queue<Integer>> holder = new ArrayList<>(Constants.DOWNLOAD_NUMBER);
 
     @Override
     public void run() {

@@ -28,7 +28,7 @@ import java.util.concurrent.atomic.AtomicInteger;
 public class ReadData implements Runnable {
     private static final Logger LOGGER = LoggerFactory.getLogger(ReadData.class.getName());
 
-    private static CountDownLatch countDownLatch = new CountDownLatch(Constants.THREAD_NUMBER);
+    private static CountDownLatch countDownLatch = new CountDownLatch(Constants.DOWNLOAD_NUMBER);
 
     private Integer threadNo;
 
@@ -49,39 +49,17 @@ public class ReadData implements Runnable {
     /**
      * 所有线程的数据,数组下标 线程编号,value 批次batch和批次号的映射map
      */
-    public static List<Map<Integer, Batch>> ALLDATA = new ArrayList<>(Constants.THREAD_NUMBER);
+    public static List<Map<Integer, Batch>> ALLDATA = new ArrayList<>(Constants.DOWNLOAD_NUMBER);
 
-    private static Batch[] FIRSTBATCH = new Batch[Constants.THREAD_NUMBER];
-    private static Batch[] LASTBATCH = new Batch[Constants.THREAD_NUMBER];
-    private static Batch[] SECONDBATCH = new Batch[Constants.THREAD_NUMBER];
+    private static Batch[] FIRSTBATCH = new Batch[Constants.DOWNLOAD_NUMBER];
+    private static Batch[] LASTBATCH = new Batch[Constants.DOWNLOAD_NUMBER];
+    private static Batch[] SECONDBATCH = new Batch[Constants.DOWNLOAD_NUMBER];
 
-    public static String getPath() {
-        String port = System.getProperty("server.port", "8080");
-        String env = System.getProperty("env", "online");
-        if ("test".equals(env)) {
-            if ("8000".equals(port)) {
-                return "http://localhost:8080/trace1.data";
-//                return "http://localhost:8080/docker-run.text";
-            } else if ("8001".equals(port)) {
-                return "http://localhost:8080/trace2.data";
-            } else {
-                return null;
-            }
-        } else {
-            if ("8000".equals(port)) {
-                return "http://localhost:" + CommonController.getDataSourcePort() + "/trace1.data";
-            } else if ("8001".equals(port)) {
-                return "http://localhost:" + CommonController.getDataSourcePort() + "/trace2.data";
-            } else {
-                return null;
-            }
-        }
 
-    }
 
     @Override
     public void run() {
-        String path = getPath();
+        String path = CommonController.getPath();
         long s = System.currentTimeMillis();
         if (StringUtils.isEmpty(path)) {
             LOGGER.warn("path is empty");
@@ -90,8 +68,8 @@ public class ReadData implements Runnable {
         try {
             URL url = new URL(path);
             HttpURLConnection httpConnection = (HttpURLConnection) url.openConnection(Proxy.NO_PROXY);
-            httpConnection.setRequestProperty("range", "bytes=" + threadNo * Constants.ONEG + "-"
-                    + (threadNo + 1) * Constants.ONEG);
+            httpConnection.setRequestProperty("range", "bytes=" + threadNo * Constants.DOWNLOAD_SIZE + "-"
+                    + (threadNo + 1) * Constants.DOWNLOAD_SIZE);
             InputStream input = httpConnection.getInputStream();
             BufferedReader bf = new BufferedReader(new InputStreamReader(input));
             Set<String> badTraceIdList = new HashSet<>(50);
@@ -208,7 +186,7 @@ public class ReadData implements Runnable {
 
             Batch batch = ALLDATA.get(threadNo).get(batchNo);
             if (lastBatch) {
-                if (threadNo == Constants.THREAD_NUMBER - 1) {
+                if (threadNo == Constants.DOWNLOAD_NUMBER - 1) {
                     getWrongTraceWithBatch(ALLDATA.get(threadNo).get(batchNo - 1), traceIdList, wrongTraceMap, batchNo);
                     getWrongTraceWithBatch(batch, traceIdList, wrongTraceMap, batchNo);
                 } else {

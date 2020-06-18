@@ -21,7 +21,7 @@ public class HandleLastBatchDataTask implements Runnable {
     private static final Logger LOGGER = LoggerFactory.getLogger(HandleLastBatchDataTask.class.getName());
 
 
-    public static BlockingQueue<TraceIdBatch> queue = new ArrayBlockingQueue<>(2 * Constants.THREAD_NUMBER);
+    public static BlockingQueue<TraceIdBatch> queue = new ArrayBlockingQueue<>(2 * Constants.DOWNLOAD_NUMBER);
 
     private boolean needSend;
 
@@ -32,13 +32,13 @@ public class HandleLastBatchDataTask implements Runnable {
     @Override
     public void run() {
         try {
-            for (int i = 0; i < 2 * Constants.THREAD_NUMBER; i++) {
-                TraceIdBatch traceIdBatch = queue.poll(10, TimeUnit.MILLISECONDS);
-                if (traceIdBatch == null) {
-                    LOGGER.warn("阻塞队列中没有任务");
-                }
-                HandleFinishBatchDataTask.aggregate(traceIdBatch);
-            }
+//            for (int i = 0; i < 2 * Constants.DOWNLOAD_NUMBER; i++) {
+//                TraceIdBatch traceIdBatch = queue.poll(10, TimeUnit.MILLISECONDS);
+//                if (traceIdBatch == null) {
+//                    LOGGER.warn("阻塞队列中没有任务");
+//                }
+//                HandleFinishBatchDataTask.aggregate(traceIdBatch);
+//            }
             if (needSend) {
                 LOGGER.warn("======应该是所有数据都处理好了，要准备上报了======");
                 sendCheckSum();
@@ -51,8 +51,8 @@ public class HandleLastBatchDataTask implements Runnable {
 
     private void sendCheckSum() {
         try {
-            while (true) {
-                if (BackendController.isFinished() && BackendController.counter.get() <= 0) {
+//            while (true) {
+//                if (BackendController.isFinished() && BackendController.counter.get() <= 0) {
                     LOGGER.info("请求总计：{}, 处理总计：{}", BackendController.counterRequest.get(),
                             HandleFinishBatchDataTask.counterDe.get());
 
@@ -64,10 +64,10 @@ public class HandleLastBatchDataTask implements Runnable {
                     Response response = Utils.callHttp(request);
                     response.close();
                     return;
-                } else {
-                    Thread.sleep(10);
-                }
-            }
+//                } else {
+//                    Thread.sleep(10);
+//                }
+//            }
         } catch (Exception e) {
             LOGGER.warn("fail to call finish", e);
         }

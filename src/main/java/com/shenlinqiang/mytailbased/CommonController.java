@@ -2,6 +2,7 @@ package com.shenlinqiang.mytailbased;
 
 import com.shenlinqiang.mytailbased.client.ReadData;
 import com.shenlinqiang.mytailbased.client.ReadDataHttpClient;
+import com.shenlinqiang.mytailbased.client.ReadDataTask;
 import com.shenlinqiang.mytailbased.client.RemoveBatchTask;
 import io.netty.buffer.Unpooled;
 import io.netty.channel.Channel;
@@ -22,6 +23,7 @@ import java.io.InputStream;
 import java.net.HttpURLConnection;
 import java.net.Proxy;
 import java.net.URL;
+import java.util.concurrent.Semaphore;
 
 
 @RestController
@@ -38,61 +40,51 @@ public class CommonController {
 
     private static ReadDataHttpClient httpClient = new ReadDataHttpClient();
 
+    public static long DATA_SIZE;
+
 
     @RequestMapping("/ready")
     public String ready() {
         return "suc";
     }
 
-    public static long s;
-
     @RequestMapping("/setParameter")
     public String setParamter(@RequestParam Integer port) {
-        if ("test".equals(System.getProperty("env"))) {
-            DATA_SOURCE_PORT = 8080;
-        } else {
-            DATA_SOURCE_PORT = port;
+        if (Utils.isBackendProcess()) {
+            return "suc";
         }
-        String path = ReadData.getPath();
-        if (Utils.isClientProcess()) {
-            try {
-                URL url = new URL(path);
-                final Request request = new Request.Builder()
-                        .url(url)
-                        .head()//这里注意请求方式为head
-                        .build();
-                Response response = Utils.callHttp(request);
-                long length = Long.parseLong(response.header("content-length"));
-                Constants.ONEG = length / Constants.THREAD_NUMBER;
-                LOGGER.info("文件总大小:{}，下载线程数：{},每个线程下载大小：{}", length, Constants.THREAD_NUMBER, Constants.ONEG);
-            } catch (Exception e) {
-                e.printStackTrace();
-            }
-            s = System.currentTimeMillis();
-            for (int i = 0; i < Constants.THREAD_NUMBER; i++) {
-                try {
-                    DefaultFullHttpRequest request = new DefaultFullHttpRequest(
-                            HttpVersion.HTTP_1_1, HttpMethod.GET, "/trace1.data");
-                    request.headers().set(HttpHeaderNames.CONNECTION, HttpHeaderNames.CONNECTION);
-                    request.headers().set(HttpHeaderNames.HOST, "localhost");
-                    request.headers().set(HttpHeaderNames.TRANSFER_ENCODING, "chunked");
-                    if (i == Constants.THREAD_NUMBER - 1) {
-                        request.headers().set(HttpHeaderNames.RANGE, "bytes=" + i * Constants.ONEG + "-");
-                    } else {
-                        request.headers().set(HttpHeaderNames.RANGE, "bytes=" + i * Constants.ONEG + "-" + (i + 1) * Constants.ONEG);
-                    }
-                    request.headers().set(HttpHeaderNames.USER_AGENT, "netty");
-                    Channel channel = httpClient.getChannel("localhost", DATA_SOURCE_PORT);
-                    ChannelFuture future = channel.writeAndFlush(request).sync();
-                    future.get();
-                } catch (Exception e) {
-                    e.printStackTrace();
-                }
-            }
 
+        if ("test".equals(System.getProperty("env", "8080"))) {
+            ReadDataTask.DATA_SOURCE_PORT = 8080;
+        } else {
+            ReadDataTask.DATA_SOURCE_PORT = port;
         }
+
+        try {
+            URL url = new URL("http://localhost:" + ReadDataTask.DATA_SOURCE_PORT + ReadDataTask.getPath());
+            final Request request = new Request.Builder().url(url).head().build();
+            Response response = Utils.callHttp(request);
+            DATA_SIZE = Long.parseLong(response.header("content-length"));
+            LOGGER.info("文件总大小:{}", DATA_SIZE);
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+
+        new Thread(new ReadDataTask()).start();
         return "suc";
     }
+
+    public static String getPath() {
+        String port = System.getProperty("server.port", "8080");
+        if ("8000".equals(port)) {
+            return "/trace1.data";
+        } else if ("8001".equals(port)) {
+            return "/trace2.data";
+        } else {
+            return null;
+        }
+    }
+
 
     @RequestMapping("/start")
     public String start() {

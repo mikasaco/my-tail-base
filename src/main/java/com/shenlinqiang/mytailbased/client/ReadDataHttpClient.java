@@ -10,6 +10,9 @@ import io.netty.channel.socket.nio.NioSocketChannel;
 import io.netty.handler.codec.http.HttpClientCodec;
 import io.netty.handler.codec.http.HttpObjectAggregator;
 import io.netty.handler.logging.LoggingHandler;
+import io.netty.handler.timeout.IdleStateHandler;
+
+import java.util.concurrent.TimeUnit;
 
 public class ReadDataHttpClient {
 
@@ -22,7 +25,6 @@ public class ReadDataHttpClient {
         bootstrap.handler(new ChannelInitializer<SocketChannel>() {
             @Override
             public void initChannel(SocketChannel ch) {
-
                 ch.pipeline().addLast(new LoggingHandler());
                 ch.pipeline().addLast(new HttpClientCodec());
                 ch.pipeline().addLast(new HttpObjectAggregator(2147483647));

@@ -33,13 +33,13 @@ public class BackendController {
 
 
     public static void init() {
-        for (int i = 0; i < Constants.THREAD_NUMBER; i++) {
+        for (int i = 0; i < Constants.DOWNLOAD_NUMBER; i++) {
             Map<Integer, TraceIdBatch> map = new ConcurrentHashMap<>();
             ALL_THREAD_TRACEIDBATCH.add(map);
         }
     }
 
-    private static ExecutorService executorService = new ThreadPoolExecutor(Constants.THREAD_NUMBER, Constants.THREAD_NUMBER,
+    private static ExecutorService executorService = new ThreadPoolExecutor(Constants.DOWNLOAD_NUMBER, Constants.DOWNLOAD_NUMBER,
             60L, TimeUnit.MILLISECONDS, new LinkedBlockingDeque<>());
 //            Executors.newFixedThreadPool(Constants.THREAD_NUMBER);
 
