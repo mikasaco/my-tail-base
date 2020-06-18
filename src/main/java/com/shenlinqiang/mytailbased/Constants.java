@@ -12,7 +12,7 @@ public class Constants {
     public static int BATCH_SIZE = 20000;
     public static int PROCESS_COUNT = 2;
     public static int DOWNLOAD_SIZE = 32 * 1024 * 1024;
-    public static final int DOWNLOAD_NUMBER = 4;
+    public static final int DOWNLOAD_NUMBER = 1;
 
     public static final MediaType MEDIATYPE = MediaType.parse("application/json; charset=utf-8");
 

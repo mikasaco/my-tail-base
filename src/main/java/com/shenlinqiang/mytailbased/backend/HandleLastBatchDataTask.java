@@ -4,6 +4,7 @@ import com.alibaba.fastjson.JSON;
 import com.shenlinqiang.mytailbased.CommonController;
 import com.shenlinqiang.mytailbased.Constants;
 import com.shenlinqiang.mytailbased.Utils;
+import com.shenlinqiang.mytailbased.client.ReadDataTask;
 import okhttp3.FormBody;
 import okhttp3.Request;
 import okhttp3.RequestBody;
@@ -59,7 +60,7 @@ public class HandleLastBatchDataTask implements Runnable {
                     String result = JSON.toJSONString(HandleFinishBatchDataTask.TRACE_CHUCKSUM_MAP);
                     RequestBody body = new FormBody.Builder()
                             .add("result", result).build();
-                    String url = String.format("http://localhost:%s/api/finished", CommonController.getDataSourcePort());
+                    String url = String.format("http://localhost:%s/api/finished", ReadDataTask.DATA_SOURCE_PORT);
                     Request request = new Request.Builder().url(url).post(body).build();
                     Response response = Utils.callHttp(request);
                     response.close();

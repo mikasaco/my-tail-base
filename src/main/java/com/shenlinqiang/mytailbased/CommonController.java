@@ -1,15 +1,7 @@
 package com.shenlinqiang.mytailbased;
 
-import com.shenlinqiang.mytailbased.client.ReadData;
 import com.shenlinqiang.mytailbased.client.ReadDataHttpClient;
 import com.shenlinqiang.mytailbased.client.ReadDataTask;
-import com.shenlinqiang.mytailbased.client.RemoveBatchTask;
-import io.netty.buffer.Unpooled;
-import io.netty.channel.Channel;
-import io.netty.channel.ChannelFuture;
-import io.netty.channel.ChannelFutureListener;
-import io.netty.handler.codec.http.*;
-import okhttp3.OkHttpClient;
 import okhttp3.Request;
 import okhttp3.Response;
 import org.slf4j.Logger;
@@ -19,11 +11,7 @@ import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
 import java.io.IOException;
-import java.io.InputStream;
-import java.net.HttpURLConnection;
-import java.net.Proxy;
 import java.net.URL;
-import java.util.concurrent.Semaphore;
 
 
 @RestController
@@ -50,14 +38,17 @@ public class CommonController {
 
     @RequestMapping("/setParameter")
     public String setParamter(@RequestParam Integer port) {
-        if (Utils.isBackendProcess()) {
-            return "suc";
-        }
-
         if ("test".equals(System.getProperty("env", "8080"))) {
+            if (Utils.isBackendProcess()) {
+                ReadDataTask.DATA_SOURCE_PORT = port;
+                return "suc";
+            }
             ReadDataTask.DATA_SOURCE_PORT = 8080;
         } else {
             ReadDataTask.DATA_SOURCE_PORT = port;
+            if (Utils.isBackendProcess()) {
+                return "suc";
+            }
         }
 
         try {
