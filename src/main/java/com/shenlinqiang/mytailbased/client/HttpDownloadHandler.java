@@ -27,10 +27,12 @@ public class HttpDownloadHandler extends ChannelInboundHandlerAdapter {
             ByteBuf buf = content.content();
 
             long s = System.currentTimeMillis();
-//            buildSpan(byteBuf);
-            buf.release();
+            buildSpan(buf);
             long e = System.currentTimeMillis();
-            System.out.println("read time: " + (e - s) + "ms");
+            System.out.println("bytebuf read time: " + (e - s) + "ms");
+
+            ByteBuffer buffer = ByteBuffer.allocateDirect(Constants.DOWNLOAD_SIZE);
+
             ReadDataTask.startOffset += buf.capacity();
             ReadDataTask.semaphore.release();
         } catch (Exception e) {
@@ -53,16 +55,11 @@ public class HttpDownloadHandler extends ChannelInboundHandlerAdapter {
     }
 
     private static final byte LF = '\n';
-    private static byte[] bytes = new byte[1024];
-    private static byte[] transForBuffer = new byte[32 * 1024];
-    private static byte[] tempBuffer = new byte[1024];
     private static int p = 0;
-    private static boolean lineEnd = false;
     private static int i = 0;
 
     private void buildSpan(ByteBuf buf) {
         p = 0;
-
         while (i < buf.capacity()) {
             byte readByte = buf.getByte(i++);
 //            buf.readBytes(transForBuffer);

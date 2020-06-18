@@ -2,6 +2,7 @@ package com.shenlinqiang.mytailbased;
 
 import java.io.File;
 import java.io.FileInputStream;
+import java.io.FileNotFoundException;
 import java.nio.ByteBuffer;
 import java.nio.channels.FileChannel;
 
@@ -39,11 +40,4 @@ public class TestDirectMemory {
         }
     }
 
-    public static void readHeapBuffer(byte[] bytes) {
-        int i = 0;
-        while (i < bytes.length) {
-            byte b = bytes[i];
-            i++;
-        }
-    }
 }
